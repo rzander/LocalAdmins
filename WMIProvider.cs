@@ -8,7 +8,6 @@ using System.Management;
 using System.Security.Principal;
 
 
-
 [assembly: WmiConfiguration(@"root\cimv2", HostingModel = ManagementHostingModel.LocalService)]
 namespace LocalAdminWMIProvider
 {
@@ -19,10 +18,13 @@ namespace LocalAdminWMIProvider
         {
             base.Install(stateSaver);
             System.Runtime.InteropServices.RegistrationServices RS = new System.Runtime.InteropServices.RegistrationServices();
-            
-            //This should be fixed with .NET 3.5 SP1
-            RS.RegisterAssembly(System.Reflection.Assembly.LoadFile(Environment.ExpandEnvironmentVariables(@"%PROGRAMFILES%\Reference Assemblies\Microsoft\Framework\v3.5\System.Management.Instrumentation.dll")), System.Runtime.InteropServices.AssemblyRegistrationFlags.SetCodeBase);
-        }
+
+            try
+            {
+                new System.EnterpriseServices.Internal.Publish().GacInstall(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            }
+            catch { }
+        } 
 
         public override void Uninstall(IDictionary savedState)
         {
@@ -37,6 +39,12 @@ namespace LocalAdminWMIProvider
             try
             {
                 base.Uninstall(savedState);
+            }
+            catch { }
+
+            try
+            {
+                new System.EnterpriseServices.Internal.Publish().GacRemove(System.Reflection.Assembly.GetExecutingAssembly().Location);
             }
             catch { }
         }
